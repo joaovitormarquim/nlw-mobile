@@ -2,8 +2,8 @@ import React from 'react';
 import Constants from 'expo-constants';
 import { Feather as Icon } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
-import MapView from 'react-native-maps';
+import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView } from 'react-native';
+import MapView, { Marker } from 'react-native-maps';
 import { SvgUri } from 'react-native-svg';
 
 const Points = () => {
@@ -11,6 +11,10 @@ const Points = () => {
 
   function handleNavigateBack() {
     navigation.goBack();
+  }
+
+  function handleNavigateToDetail() {
+    navigation.navigate('Detail');
   }
 
   return (
@@ -24,7 +28,29 @@ const Points = () => {
         <Text style={styles.description}>Encontre no mapa um ponto de coleta.</Text>
 
         <View style={styles.mapContainer}>
-          <MapView style={styles.map} />
+          <MapView
+            style={styles.map}
+              initialRegion={{
+                latitude: -7.9860761,
+                longitude: -38.2849149,
+                latitudeDelta: 0.014,
+                longitudeDelta: 0.014
+            }}
+          >
+            <Marker
+              style={styles.mapMarker}
+              onPress={handleNavigateToDetail}
+              coordinate={{
+                latitude: -7.9860761,
+                longitude: -38.2849149
+              }}
+            >
+              <View style={styles.mapMarkerContainer}>
+                <Image style={styles.mapMarkerImage} source={{ uri: 'https://www.infovarejo.com.br/novo/wp-content/uploads/2017/08/O-que-fazer-com-a-capacidade-ociosa-do-seu-supermercado-740.jpg' }} />
+                <Text style={styles.mapMarkerTitle}>Mercadão</Text>
+              </View>
+            </Marker>
+          </MapView>
         </View>
       </View>
 
