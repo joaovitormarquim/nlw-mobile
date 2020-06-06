@@ -1,20 +1,61 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Feather as Icon } from '@expo/vector-icons';
 import { View, ImageBackground, Text, Image, StyleSheet, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
 import { RectButton } from 'react-native-gesture-handler';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import Dropdown from '../../components/Dropdown';
+import axios from 'axios';
+
+interface IBGEUFResponse {
+  sigla: string;
+}
+
+interface IBGECityResponse {
+  nome: string;
+}
 
 const Home = () => {
-  const [uf, setUf] = useState('');
-  const [city, setCity] = useState('');
+  const [selectedUf, setSelectedUf] = useState<string>('0');
+  const [selectedCity, setSelectedCity] = useState<string>('0');
+
+  const [cities, setCities] = useState<string[]>([]);
+  const [ufs, setUfs] = useState<string[]>([]);
 
   const navigation = useNavigation();
 
+  useEffect(() => {
+    axios.get<IBGEUFResponse[]>('https://servicodados.ibge.gov.br/api/v1/localidades/estados?orderBy=nome')
+      .then(response => {
+        const ufInitials = response.data.map(uf => uf.sigla);
+
+        setUfs(ufInitials);
+      });
+  }, []);
+
+  useEffect(() => {
+    // carregar as cidades sempre que a uf mudar
+    axios.get<IBGECityResponse[]>(`https://servicodados.ibge.gov.br/api/v1/localidades/estados/${selectedUf}/municipios`)
+      .then(response => {
+        const cityNames = response.data.map(city => city.nome);
+
+        setCities(cityNames);
+      });
+
+  }, [selectedUf]);
+
   function handleNavigateToPoints() {
     navigation.navigate('Points', {
-      uf,
-      city,
+      selectedUf,
+      selectedCity,
     });
+  }
+
+  function handleUfSelection(uf: string) {
+    setSelectedUf(uf);
+  }
+
+  function handleCitySelection(city: string) {
+    setSelectedCity(city);
   }
 
   return (
@@ -33,23 +74,23 @@ const Home = () => {
         </View>
 
         <View style={styles.footer}>
-          <TextInput
-            style={styles.input}
-            placeholder="Digite a UF"
-            value={uf}
-            maxLength={2}
-            autoCapitalize="characters"
-            autoCorrect={false}
-            onChangeText={setUf}
-          />
 
-          <TextInput
-            style={styles.input}
-            placeholder="Digite a Cidade"
-            value={city}
-            autoCorrect={false}
-            onChangeText={setCity}
-          />
+
+          <View style={styles.input}>
+            <Dropdown
+              items={ufs}
+              placeholder="Selecione uma UF"
+              valueChanged={handleUfSelection}
+            />
+          </View>
+
+          <View style={styles.input}>
+            <Dropdown
+              items={cities}
+              placeholder="Selecione uma Cidade"
+              valueChanged={handleCitySelection}
+            />
+          </View>
 
           <RectButton
             style={styles.button}
@@ -109,6 +150,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     paddingHorizontal: 24,
     fontSize: 16,
+    justifyContent: 'center'
   },
 
   button: {
